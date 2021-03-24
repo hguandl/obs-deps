@@ -4,6 +4,7 @@ set -eE
 
 PRODUCT_NAME="OBS Pre-Built Dependencies"
 BASE_DIR="$(git rev-parse --show-toplevel)"
+BREW_DIR="$(brew --prefix)"
 
 export COLOR_RED=$(tput setaf 1)
 export COLOR_GREEN=$(tput setaf 2)
@@ -51,7 +52,6 @@ export SWIG_VERSION="4.0.2"
 export SWIG_HASH="d53be9730d8d58a16bf0cbd1f8ac0c0c3e1090573168bfa151b01eb47fa906fc"
 export MACOSX_DEPLOYMENT_TARGET="10.13"
 export FFMPEG_REVISION="06"
-export PATH="/usr/local/opt/ccache/libexec:${PATH}"
 export CURRENT_DATE="$(date +"%Y-%m-%d")"
 export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/tmp/obsdeps/lib/pkgconfig"
 export PARALLELISM="$(sysctl -n hw.ncpu)"
@@ -98,23 +98,23 @@ caught_error() {
 }
 
 restore_brews() {
-    if [ -d /usr/local/opt/xz ] && [ ! -f /usr/local/lib/liblzma.dylib ]; then
+    if [ -d ${BREW_DIR}/opt/xz ] && [ ! -f ${BREW_DIR}/lib/liblzma.dylib ]; then
       brew link xz
     fi
 
-    if [ -d /usr/local/opt/sdl2 ] && ! [ -f /usr/local/lib/libSDL2.dylib ]; then
+    if [ -d ${BREW_DIR}/opt/sdl2 ] && ! [ -f ${BREW_DIR}/lib/libSDL2.dylib ]; then
       brew link sdl2
     fi
 
-    if [ -d /usr/local/opt/zstd ] && [ ! -f /usr/local/lib/libzstd.dylib ]; then
+    if [ -d ${BREW_DIR}/opt/zstd ] && [ ! -f ${BREW_DIR}/lib/libzstd.dylib ]; then
       brew link zstd
     fi
 
-    if [ -d /usr/local/opt/libtiff ] && [ !  -f /usr/local/lib/libtiff.dylib ]; then
+    if [ -d ${BREW_DIR}/opt/libtiff ] && [ !  -f ${BREW_DIR}/lib/libtiff.dylib ]; then
       brew link libtiff
     fi
 
-    if [ -d /usr/local/opt/webp ] && [ ! -f /usr/local/lib/libwebp.dylib ]; then
+    if [ -d ${BREW_DIR}/opt/webp ] && [ ! -f ${BREW_DIR}/lib/libwebp.dylib ]; then
       brew link webp
     fi
 }
@@ -124,12 +124,12 @@ build_02_install_homebrew_dependencies() {
     trap "caught_error 'Install Homebrew dependencies'" ERR
     ensure_dir ${BASE_DIR}
 
-    if [ -d /usr/local/opt/openssl@1.0.2t ]; then
+    if [ -d ${BREW_DIR}/opt/openssl@1.0.2t ]; then
         brew uninstall openssl@1.0.2t
         brew untap local/openssl
     fi
     
-    if [ -d /usr/local/opt/python@2.7.17 ]; then
+    if [ -d ${BREW_DIR}/opt/python@2.7.17 ]; then
         brew uninstall python@2.7.17
         brew untap local/python2
     fi
@@ -166,15 +166,15 @@ build_06_build_dependency_qt() {
 
     ${BASE_DIR}/utils/safe_fetch "https://download.qt.io/official_releases/qt/$(echo "${MAC_QT_VERSION}" | cut -d "." -f -2)/${MAC_QT_VERSION}/single/qt-everywhere-src-${MAC_QT_VERSION}.tar.xz" "${MAC_QT_HASH}"
     tar -xf qt-everywhere-src-${MAC_QT_VERSION}.tar.xz
-    if [ -d /usr/local/opt/zstd ]; then
+    if [ -d ${BREW_DIR}/opt/zstd ]; then
       brew unlink zstd
     fi
     
-    if [ -d /usr/local/opt/libtiff ]; then
+    if [ -d ${BREW_DIR}/opt/libtiff ]; then
       brew unlink libtiff
     fi
     
-    if [ -d /usr/local/opt/webp ]; then
+    if [ -d ${BREW_DIR}/opt/webp ]; then
       brew unlink webp
     fi
     if [ "${MAC_QT_VERSION}" = "5.14.1" ]; then
@@ -188,10 +188,7 @@ build_06_build_dependency_qt() {
     fi
     mkdir build
     cd build
-    if [ ! -n "${CI}" ]; then
-      WITH_CCACHE=" -ccache"
-    fi
-    ../configure ${WITH_CCACHE} --prefix="/tmp/obsdeps" -release -opensource -confirm-license -system-zlib \
+    ../configure --prefix="/tmp/obsdeps" -release -opensource -confirm-license -system-zlib \
       -qt-libpng -qt-libjpeg -qt-freetype -qt-pcre -nomake examples -nomake tests -no-rpath -no-glib -pkg-config -dbus-runtime \
       -skip qt3d -skip qtactiveqt -skip qtandroidextras -skip qtcharts -skip qtconnectivity -skip qtdatavis3d \
       -skip qtdeclarative -skip qtdoc -skip qtgamepad -skip qtgraphicaleffects -skip qtlocation \
@@ -206,15 +203,15 @@ build_06_build_dependency_qt() {
     
     mv /tmp/obsdeps ${BASE_DIR}/CI_BUILD/obsdeps
     
-    if [ -d /usr/local/opt/zstd ] && [ ! -f /usr/local/lib/libzstd.dylib ]; then
+    if [ -d ${BREW_DIR}/opt/zstd ] && [ ! -f ${BREW_DIR}/lib/libzstd.dylib ]; then
       brew link zstd
     fi
     
-    if [ -d /usr/local/opt/libtiff ] && [ !  -f /usr/local/lib/libtiff.dylib ]; then
+    if [ -d ${BREW_DIR}/opt/libtiff ] && [ !  -f ${BREW_DIR}/lib/libtiff.dylib ]; then
       brew link libtiff
     fi
     
-    if [ -d /usr/local/opt/webp ] && [ ! -f /usr/local/lib/libwebp.dylib ]; then
+    if [ -d ${BREW_DIR}/opt/webp ] && [ ! -f ${BREW_DIR}/lib/libwebp.dylib ]; then
       brew link webp
     fi
 }

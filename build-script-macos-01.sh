@@ -4,6 +4,7 @@ set -eE
 
 PRODUCT_NAME="OBS Pre-Built Dependencies"
 BASE_DIR="$(git rev-parse --show-toplevel)"
+BREW_DIR="$(brew --prefix)"
 
 export COLOR_RED=$(tput setaf 1)
 export COLOR_GREEN=$(tput setaf 2)
@@ -51,7 +52,6 @@ export SWIG_VERSION="4.0.2"
 export SWIG_HASH="d53be9730d8d58a16bf0cbd1f8ac0c0c3e1090573168bfa151b01eb47fa906fc"
 export MACOSX_DEPLOYMENT_TARGET="10.13"
 export FFMPEG_REVISION="06"
-export PATH="/usr/local/opt/ccache/libexec:${PATH}"
 export CURRENT_DATE="$(date +"%Y-%m-%d")"
 export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/tmp/obsdeps/lib/pkgconfig"
 export PARALLELISM="$(sysctl -n hw.ncpu)"
@@ -98,23 +98,23 @@ caught_error() {
 }
 
 restore_brews() {
-    if [ -d /usr/local/opt/xz ] && [ ! -f /usr/local/lib/liblzma.dylib ]; then
+    if [ -d ${BREW_DIR}/opt/xz ] && [ ! -f ${BREW_DIR}/lib/liblzma.dylib ]; then
       brew link xz
     fi
 
-    if [ -d /usr/local/opt/sdl2 ] && ! [ -f /usr/local/lib/libSDL2.dylib ]; then
+    if [ -d ${BREW_DIR}/opt/sdl2 ] && ! [ -f ${BREW_DIR}/lib/libSDL2.dylib ]; then
       brew link sdl2
     fi
 
-    if [ -d /usr/local/opt/zstd ] && [ ! -f /usr/local/lib/libzstd.dylib ]; then
+    if [ -d ${BREW_DIR}/opt/zstd ] && [ ! -f ${BREW_DIR}/lib/libzstd.dylib ]; then
       brew link zstd
     fi
 
-    if [ -d /usr/local/opt/libtiff ] && [ !  -f /usr/local/lib/libtiff.dylib ]; then
+    if [ -d ${BREW_DIR}/opt/libtiff ] && [ !  -f ${BREW_DIR}/lib/libtiff.dylib ]; then
       brew link libtiff
     fi
 
-    if [ -d /usr/local/opt/webp ] && [ ! -f /usr/local/lib/libwebp.dylib ]; then
+    if [ -d ${BREW_DIR}/opt/webp ] && [ ! -f ${BREW_DIR}/lib/libwebp.dylib ]; then
       brew link webp
     fi
 }
@@ -124,17 +124,17 @@ build_02_install_homebrew_dependencies() {
     trap "caught_error 'Install Homebrew dependencies'" ERR
     ensure_dir ${BASE_DIR}
 
-    if [ -d /usr/local/opt/openssl@1.0.2t ]; then
+    if [ -d ${BREW_DIR}/opt/openssl@1.0.2t ]; then
         brew uninstall openssl@1.0.2t
         brew untap local/openssl
     fi
     
-    if [ -d /usr/local/opt/python@2.7.17 ]; then
+    if [ -d ${BREW_DIR}/opt/python@2.7.17 ]; then
         brew uninstall python@2.7.17
         brew untap local/python2
     fi
     brew bundle
-    export PATH="$PATH:/usr/local/opt/gnu-tar/libexec/gnubin"
+    export PATH="$PATH:${BREW_DIR}/opt/gnu-tar/libexec/gnubin"
 }
 
 
@@ -314,9 +314,9 @@ build_16_build_dependency_libx264() {
     MACOS_MINOR="$(echo ${MACOS_VERSION} | cut -d '.' -f 2)"
     if [ "${MACOS_MAJOR}" -eq 10 ] && [ "${MACOS_MINOR}" -le 13 ]; then
       brew install gcc || true
-      CC="/usr/local/bin/gcc"
-      LD="/usr/local/bin/gcc"
-      CXX="/usr/local/bin/g++"
+      CC="${BREW_DIR}/bin/gcc"
+      LD="${BREW_DIR}/bin/gcc"
+      CXX="${BREW_DIR}/bin/g++"
     fi
     mkdir -p x264-${LIBX264_VERSION}
     cd ./x264-${LIBX264_VERSION}
@@ -508,11 +508,11 @@ build_27_build_dependency_ffmpeg() {
     export LD_LIBRARY_PATH="/tmp/obsdeps/lib"
     ${BASE_DIR}/utils/safe_fetch "https://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.xz" "${FFMPEG_HASH}"
     tar -xf ffmpeg-${FFMPEG_VERSION}.tar.xz
-    if [ -d /usr/local/opt/xz ]; then
+    if [ -d ${BREW_DIR}/opt/xz ]; then
       brew unlink xz
     fi
     
-    if [ -d /usr/local/opt/sdl2 ]; then
+    if [ -d ${BREW_DIR}/opt/sdl2 ]; then
       brew unlink sdl2
     fi
     cd ./ffmpeg-${FFMPEG_VERSION}
@@ -521,11 +521,11 @@ build_27_build_dependency_ffmpeg() {
     ../configure --host-cflags="-I/tmp/obsdeps/include" --host-ldflags="-L/tmp/obsdeps/lib" --pkg-config-flags="--static" --extra-ldflags="-mmacosx-version-min=${MACOSX_DEPLOYMENT_TARGET}" --enable-shared --disable-static --enable-pthreads --enable-version3 --shlibdir="/tmp/obsdeps/lib" --enable-gpl --enable-videotoolbox --disable-libjack --disable-indev=jack --disable-outdev=sdl --disable-programs --disable-doc --enable-libx264 --enable-libopus --enable-libvorbis --enable-libvpx --enable-libsrt --enable-libtheora --enable-libmp3lame
     make -j${PARALLELISM}
     
-    if [ -d /usr/local/opt/xz ] && [ ! -f /usr/local/lib/liblzma.dylib ]; then
+    if [ -d ${BREW_DIR}/opt/xz ] && [ ! -f ${BREW_DIR}/lib/liblzma.dylib ]; then
       brew link xz
     fi
     
-    if [ -d /usr/local/opt/sdl2 ] && ! [ -f /usr/local/lib/libSDL2.dylib ]; then
+    if [ -d ${BREW_DIR}/opt/sdl2 ] && ! [ -f ${BREW_DIR}/lib/libSDL2.dylib ]; then
       brew link sdl2
     fi
 }
