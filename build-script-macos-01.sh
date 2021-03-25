@@ -516,6 +516,7 @@ build_27_build_dependency_ffmpeg() {
       brew unlink sdl2
     fi
     cd ./ffmpeg-${FFMPEG_VERSION}
+    patch -p01 -i ${BASE_DIR}/patches/ffmpeg-4.x-hevc-flv.patch
     mkdir build
     cd ./build
     ../configure --host-cflags="-I/tmp/obsdeps/include" --host-ldflags="-L/tmp/obsdeps/lib" --pkg-config-flags="--static" --extra-ldflags="-mmacosx-version-min=${MACOSX_DEPLOYMENT_TARGET}" --enable-shared --disable-static --enable-pthreads --enable-version3 --shlibdir="/tmp/obsdeps/lib" --enable-gpl --enable-videotoolbox --disable-libjack --disable-indev=jack --disable-outdev=sdl --disable-programs --disable-doc --enable-libx264 --enable-libopus --enable-libvorbis --enable-libvpx --enable-libsrt --enable-libtheora --enable-libmp3lame
